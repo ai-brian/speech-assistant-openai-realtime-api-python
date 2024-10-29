@@ -3,6 +3,7 @@ import json
 import base64
 import asyncio
 import websockets
+import ssl
 from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import HTMLResponse
 from fastapi.websockets import WebSocketDisconnect
@@ -58,8 +59,12 @@ async def handle_media_stream(websocket: WebSocket):
     print("Client connected")
     await websocket.accept()
 
+    ssl_context = ssl.SSLContext()
+    ssl_context.verify_mode = ssl.CERT_NONE
+
     async with websockets.connect(
         'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01',
+        ssl=ssl_context,
         extra_headers={
             "Authorization": f"Bearer {OPENAI_API_KEY}",
             "OpenAI-Beta": "realtime=v1"
