@@ -8,12 +8,15 @@ from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import HTMLResponse
 from fastapi.websockets import WebSocketDisconnect
 from twilio.twiml.voice_response import VoiceResponse, Connect, Say, Stream
+from twilio.rest import Client
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # Configuration
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 PORT = int(os.getenv('PORT', 5050))
 SYSTEM_MESSAGE = (
     "You are a helpful and bubbly AI assistant who loves to chat about "
@@ -28,6 +31,8 @@ LOG_EVENT_TYPES = [
 ]
 SHOW_TIMING_MATH = False
 
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
 app = FastAPI()
 
 if not OPENAI_API_KEY:
@@ -35,6 +40,15 @@ if not OPENAI_API_KEY:
 
 @app.get("/", response_class=HTMLResponse)
 async def index_page():
+    try:
+        call = client.calls.create(
+            url="https://1d3e-75-104-111-63.ngrok-free.app/incoming-call",
+            to="6303352279",
+            from_="8889019823"
+        )
+        print("Call initiated successfully. Call SID:", call.sid)
+    except Exception as e:
+        print("An error occurred while trying to create the call:", str(e))
     return {"message": "Twilio Media Stream Server is running!"}
 
 @app.api_route("/incoming-call", methods=["GET", "POST"])
